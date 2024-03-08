@@ -6,7 +6,7 @@
 /*   By: hsenzaki <hsenzaki@student.42london.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/04 16:15:56 by hsenzaki          #+#    #+#             */
-/*   Updated: 2024/03/08 00:12:33 by hsenzaki         ###   ########.fr       */
+/*   Updated: 2024/03/08 18:11:00 by hsenzaki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <stdio.h>
@@ -17,11 +17,24 @@
 #define BUFFER_SIZE 10
 
 typedef struct node {
-	int	data;
+	char	*data;
 	struct	node *next;
 } node_t;
 
-void	create_newnode(node_t	*head, int	buff)
+int	ft_strlen(const char *s)
+{
+	int	i;
+
+	i = 0;
+	while (*s != 0)
+	{
+		i++;
+		s++;
+	}
+	return (i);
+}
+
+void	create_newnode(node_t	*head, char	*buff)
 {
 	node_t	*newnode;
 	node_t	*findlast;
@@ -35,28 +48,72 @@ void	create_newnode(node_t	*head, int	buff)
 	findlast->next = newnode;
 }
 
+char	*create_line(node_t	*head)
+{
+	node_t	*node_ptr;
+	char	*str_ptr;
+	int		char_count;
+	char	*all;
+	char	*all_cpy;
+
+	char_count = 0;
+	node_ptr = head -> next;
+	while (node_ptr->next != NULL)
+	{
+		str_ptr = node_ptr->data;
+		char_count = char_count + ft_strlen(str_ptr);
+		node_ptr = node_ptr->next;
+	}
+	str_ptr = node_ptr->data;
+	char_count = char_count + ft_strlen(str_ptr);
+	printf("char_count: %d\n", char_count);
+
+	all = malloc(char_count * sizeof(char));
+	all_cpy = all; 
+	node_ptr = head->next;
+	while (node_ptr->next != NULL)
+	{
+		str_ptr = node_ptr->data;
+		while (*str_ptr != '\0')
+		{
+			*all = *str_ptr;
+			str_ptr++;
+			all++;
+		}
+		node_ptr = node_ptr->next;
+	}
+	str_ptr = node_ptr->data;
+	while (*str_ptr != '\0')
+	{
+		*all = *str_ptr;
+		str_ptr++;
+		all++;
+	}
+	return(all_cpy);
+}
+
 char	*get_next_line(int fd)
 {
-	char	*buff;
+	char	*str1;
+	char	*str2;
+	char	*str3;
 	node_t	*head;
 	node_t	*ptr;
+	char	*all;
+
+	str1 = "string1";
+	str2 = "string2";
+	str3 = "string3";
 
 	head = malloc(sizeof(node_t));
 	head->data = NULL;
 	head->next = NULL;
-	create_newnode(head, 1);
-	create_newnode(head, 2);
-	create_newnode(head, 3);
+	create_newnode(head, str1);
+	create_newnode(head, str2);
+	create_newnode(head, str3);
 
-	ptr = head;
-	while (ptr->next != NULL)
-	{
-		if (ptr->data != NULL)
-			printf("%d\n",ptr->data);
-		ptr = ptr->next;
-	}
-	// read(fd, buff, BUFFER_SIZE);
-	return("teststring");
+	all = create_line(head);
+	return(all);
 }
 
 void	main()
