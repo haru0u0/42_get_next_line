@@ -6,7 +6,7 @@
 /*   By: hsenzaki <hsenzaki@student.42london.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/04 16:15:56 by hsenzaki          #+#    #+#             */
-/*   Updated: 2024/03/02 10:52:14 by hsenzaki         ###   ########.fr       */
+/*   Updated: 2024/03/08 00:12:33 by hsenzaki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <stdio.h>
@@ -14,41 +14,49 @@
 #include <fcntl.h>
 #include <stdlib.h>
 
-void	*loop()
-{
+#define BUFFER_SIZE 10
 
+typedef struct node {
+	int	data;
+	struct	node *next;
+} node_t;
+
+void	create_newnode(node_t	*head, int	buff)
+{
+	node_t	*newnode;
+	node_t	*findlast;
+
+	findlast = head;
+	newnode = malloc(sizeof(node_t));
+	newnode->data = buff;
+	newnode->next = NULL;
+	while (findlast->next != NULL)
+		findlast = findlast->next;
+	findlast->next = newnode;
 }
 
 char	*get_next_line(int fd)
 {
-	char	buff[100];
-	int	i;
-	int	rtn;
-	char	*line;
-	i = 0;
-	line = malloc(100);
+	char	*buff;
+	node_t	*head;
+	node_t	*ptr;
 
-	if(line < 0)
+	head = malloc(sizeof(node_t));
+	head->data = NULL;
+	head->next = NULL;
+	create_newnode(head, 1);
+	create_newnode(head, 2);
+	create_newnode(head, 3);
+
+	ptr = head;
+	while (ptr->next != NULL)
 	{
-		return("error");
+		if (ptr->data != NULL)
+			printf("%d\n",ptr->data);
+		ptr = ptr->next;
 	}
-
-	rtn = read(fd, buff, 6);
-	printf("return of read: %d\n", rtn);
-	while(i < 10 && buff[i]!='\n')
-	{
-		line[i] = buff[i];
-		i++;
-	}
-
-
-	while(i < 10 && buff[i]!='\n')
-	{
-		line[i] = buff[i];
-		i++;
-	}
-
-	return(line);
+	// read(fd, buff, BUFFER_SIZE);
+	return("teststring");
 }
 
 void	main()
@@ -58,6 +66,6 @@ void	main()
 	fd = open("test.txt", O_RDONLY);
 	str = get_next_line(fd);
 
-	printf("\nreturn value:%s",str);
+	printf("return value:%s",str);
 	close(fd);
 }
