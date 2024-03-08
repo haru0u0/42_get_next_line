@@ -6,7 +6,7 @@
 /*   By: hsenzaki <hsenzaki@student.42london.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/04 16:15:56 by hsenzaki          #+#    #+#             */
-/*   Updated: 2024/03/08 18:11:00 by hsenzaki         ###   ########.fr       */
+/*   Updated: 2024/03/08 18:35:13 by hsenzaki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <stdio.h>
@@ -14,7 +14,7 @@
 #include <fcntl.h>
 #include <stdlib.h>
 
-#define BUFFER_SIZE 10
+#define BUFFER_SIZE 5
 
 typedef struct node {
 	char	*data;
@@ -34,7 +34,7 @@ int	ft_strlen(const char *s)
 	return (i);
 }
 
-void	create_newnode(node_t	*head, char	*buff)
+void	insert_newnode(node_t	*head, char	*buff)
 {
 	node_t	*newnode;
 	node_t	*findlast;
@@ -92,26 +92,34 @@ char	*create_line(node_t	*head)
 	return(all_cpy);
 }
 
-char	*get_next_line(int fd)
+node_t	*initialize_node(node_t *head)
 {
-	char	*str1;
-	char	*str2;
-	char	*str3;
-	node_t	*head;
-	node_t	*ptr;
-	char	*all;
-
-	str1 = "string1";
-	str2 = "string2";
-	str3 = "string3";
-
 	head = malloc(sizeof(node_t));
 	head->data = NULL;
 	head->next = NULL;
-	create_newnode(head, str1);
-	create_newnode(head, str2);
-	create_newnode(head, str3);
+	return(head);
+}
 
+char	*get_next_line(int fd)
+{
+	node_t	*head;
+	node_t	*ptr;
+	char	*all;
+	char	*buff;
+
+	head = initialize_node(head);
+
+	buff = malloc (BUFFER_SIZE + sizeof(char));
+	read(fd, buff, BUFFER_SIZE);
+	buff[BUFFER_SIZE] = '\0';
+	printf("buff: %s", buff);
+	insert_newnode(head, buff);
+
+	//buff = malloc (BUFFER_SIZE + sizeof(char));
+	//buff[BUFFER_SIZE] = '\0';
+	//insert_newnode(head, buff);
+
+	//all ="hello";
 	all = create_line(head);
 	return(all);
 }
