@@ -6,22 +6,13 @@
 /*   By: hsenzaki <hsenzaki@student.42london.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/04 16:15:56 by hsenzaki          #+#    #+#             */
-/*   Updated: 2024/03/08 18:35:13 by hsenzaki         ###   ########.fr       */
+/*   Updated: 2024/03/09 04:30:07 by hsenzaki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-#include <stdio.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <stdlib.h>
+#include "get_next_line.h"
+// #define BUFFER_SIZE 5
 
-#define BUFFER_SIZE 5
-
-typedef struct node {
-	char	*data;
-	struct	node *next;
-} node_t;
-
-int	ft_strlen(const char *s)
+int	ft_strlen(char	*s)
 {
 	int	i;
 
@@ -34,13 +25,13 @@ int	ft_strlen(const char *s)
 	return (i);
 }
 
-void	insert_newnode(node_t	*head, char	*buff)
+void	insert_newnode(t_node	*head, char	*buff)
 {
-	node_t	*newnode;
-	node_t	*findlast;
+	t_node	*newnode;
+	t_node	*findlast;
 
 	findlast = head;
-	newnode = malloc(sizeof(node_t));
+	newnode = ft_calloc (1, sizeof(t_node));
 	newnode->data = buff;
 	newnode->next = NULL;
 	while (findlast->next != NULL)
@@ -48,9 +39,57 @@ void	insert_newnode(node_t	*head, char	*buff)
 	findlast->next = newnode;
 }
 
-char	*create_line(node_t	*head)
+void	insert_newnode_eol(t_node	*head, char	*buff)
 {
-	node_t	*node_ptr;
+	t_node		*newnode;
+	t_node		*findlast;
+	char		*bynewline;
+	char		*bynewline_cpy;
+	static char	*rest;
+	static int	isrest = 0;
+
+	if (buff == NULL)
+	{
+		if(isrest == 1)
+		{
+			insert_newnode(head, rest);
+		}
+	}
+	else
+	{
+		findlast = head;
+		newnode = ft_calloc(1, sizeof(t_node));
+		bynewline = ft_calloc(BUFFER_SIZE + 1, sizeof(char));
+		bynewline_cpy = bynewline;
+
+		while(*buff != '\n' || *buff != '\0')
+		{
+			*bynewline = *buff;
+			bynewline++;
+			buff++;
+		}
+		if (*buff == '\n')
+		{
+			*bynewline = '\n';
+			buff++;
+			rest = buff;
+			isrest = 1;
+		}else if(*buff == '\0')
+		{
+			*bynewline = '\0';
+		}
+
+		newnode->data = bynewline_cpy;
+		newnode->next = NULL;
+		while (findlast->next != NULL)
+			findlast = findlast->next;
+		findlast->next = newnode;
+	}
+}
+
+char	*create_line(t_node	*head)
+{
+	t_node	*node_ptr;
 	char	*str_ptr;
 	int		char_count;
 	char	*all;
@@ -66,9 +105,8 @@ char	*create_line(node_t	*head)
 	}
 	str_ptr = node_ptr->data;
 	char_count = char_count + ft_strlen(str_ptr);
-	printf("char_count: %d\n", char_count);
 
-	all = malloc(char_count * sizeof(char));
+	all = ft_calloc(char_count + 1, sizeof(char));
 	all_cpy = all; 
 	node_ptr = head->next;
 	while (node_ptr->next != NULL)
@@ -92,45 +130,94 @@ char	*create_line(node_t	*head)
 	return(all_cpy);
 }
 
-node_t	*initialize_node(node_t *head)
+bool	is_eol(char	*str)
 {
-	head = malloc(sizeof(node_t));
-	head->data = NULL;
-	head->next = NULL;
-	return(head);
+	int	i;
+
+	i = 0;
+	while (i < BUFFER_SIZE)
+	{
+		if(str[i] == '\n' || str[i]== '\0')
+			return(1);
+		i++;
+	}
+	return(0);
 }
 
 char	*get_next_line(int fd)
 {
-	node_t	*head;
-	node_t	*ptr;
-	char	*all;
+	t_node	*head;
 	char	*buff;
+	bool	done;
+	int		byte_read;
+	char	*all;
 
-	head = initialize_node(head);
+	if (BUFFER_SIZE < 1)
+		return (NULL);
+	done = 0;
+	byte_read = 1;
+	head = ft_calloc(1, sizeof(t_node));
+	head->data = NULL;
+	head->next = NULL;
 
-	buff = malloc (BUFFER_SIZE + sizeof(char));
-	read(fd, buff, BUFFER_SIZE);
-	buff[BUFFER_SIZE] = '\0';
-	printf("buff: %s", buff);
-	insert_newnode(head, buff);
+	insert_newnode_eol(head, NULL);
 
-	//buff = malloc (BUFFER_SIZE + sizeof(char));
-	//buff[BUFFER_SIZE] = '\0';
-	//insert_newnode(head, buff);
-
-	//all ="hello";
+	while (done == 0)
+	{
+		buff = ft_calloc (BUFFER_SIZE + 1, sizeof(char));
+		byte_read = read(fd, buff, BUFFER_SIZE);
+		if (byte_read == -1)
+		{
+			free(buff);
+			return (NULL);
+		}
+		else
+			buff[BUFFER_SIZE] = '\0';
+		if (is_eol(buff) == 0)
+			insert_newnode(head, buff);
+		else
+		{
+			insert_newnode_eol(head, buff);
+			done = 1;
+		}
+	}
 	all = create_line(head);
+	free(head);
 	return(all);
 }
 
-void	main()
+
+int	main()
 {
 	int		fd;
 	char	*str;
-	fd = open("test.txt", O_RDONLY);
+	
 	str = get_next_line(fd);
+	printf("\n\n<< return value1:%s >>\n",str);
 
-	printf("return value:%s",str);
+	str = get_next_line(fd);
+	printf("\n\n<< return value2:%s >>\n",str);
+
+	str = get_next_line(fd);
+	printf("\n\n<< return value2:%s >>\n",str);
+
+	str = get_next_line(fd);
+	printf("\n\n<< return value1:%s >>\n",str);
+
+	str = get_next_line(fd);
+	printf("\n\n<< return value1:%s >>\n",str);
+
+	str = get_next_line(fd);
+	printf("\n\n<< return value1:%s >>\n",str);
+
+	str = get_next_line(fd);
+	printf("\n\n<< return value1:%s >>\n",str);
+
+	str = get_next_line(fd);
+	printf("\n\n<< return value1:%s >>\n",str);
+
+	str = get_next_line(fd);
+	printf("\n\n<< return value1:%s >>\n",str);
+
 	close(fd);
 }
