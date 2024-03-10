@@ -1,91 +1,16 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   get_next_line.c                                    :+:      :+:    :+:   */
+/*   new_get_next_line.c                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: hsenzaki <hsenzaki@student.42london.com>   +#+  +:+       +#+        */
+/*   By: hsenzaki <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/02/04 16:15:56 by hsenzaki          #+#    #+#             */
-/*   Updated: 2024/03/09 04:30:07 by hsenzaki         ###   ########.fr       */
+/*   Created: 2024/03/09 07:08:39 by hsenzaki          #+#    #+#             */
+/*   Updated: 2024/03/09 07:08:42 by hsenzaki         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
 #include "get_next_line.h"
-// #define BUFFER_SIZE 5
-
-int	ft_strlen(char	*s)
-{
-	int	i;
-
-	i = 0;
-	while (*s != 0)
-	{
-		i++;
-		s++;
-	}
-	return (i);
-}
-
-void	insert_newnode(t_node	*head, char	*buff)
-{
-	t_node	*newnode;
-	t_node	*findlast;
-
-	findlast = head;
-	newnode = ft_calloc (1, sizeof(t_node));
-	newnode->data = buff;
-	newnode->next = NULL;
-	while (findlast->next != NULL)
-		findlast = findlast->next;
-	findlast->next = newnode;
-}
-
-void	insert_newnode_eol(t_node	*head, char	*buff)
-{
-	t_node		*newnode;
-	t_node		*findlast;
-	char		*bynewline;
-	char		*bynewline_cpy;
-	static char	*rest;
-	static int	isrest = 0;
-
-	if (buff == NULL)
-	{
-		if(isrest == 1)
-		{
-			insert_newnode(head, rest);
-		}
-	}
-	else
-	{
-		findlast = head;
-		newnode = ft_calloc(1, sizeof(t_node));
-		bynewline = ft_calloc(BUFFER_SIZE + 1, sizeof(char));
-		bynewline_cpy = bynewline;
-
-		while(*buff != '\n' || *buff != '\0')
-		{
-			*bynewline = *buff;
-			bynewline++;
-			buff++;
-		}
-		if (*buff == '\n')
-		{
-			*bynewline = '\n';
-			buff++;
-			rest = buff;
-			isrest = 1;
-		}else if(*buff == '\0')
-		{
-			*bynewline = '\0';
-		}
-
-		newnode->data = bynewline_cpy;
-		newnode->next = NULL;
-		while (findlast->next != NULL)
-			findlast = findlast->next;
-		findlast->next = newnode;
-	}
-}
 
 char	*create_line(t_node	*head)
 {
@@ -94,22 +19,25 @@ char	*create_line(t_node	*head)
 	int		char_count;
 	char	*all;
 	char	*all_cpy;
+	bool	islast;
 
+	islast = 0;
 	char_count = 0;
 	node_ptr = head -> next;
-	while (node_ptr->next != NULL)
+	while (islast != 1)
 	{
-		str_ptr = node_ptr->data;
-		char_count = char_count + ft_strlen(str_ptr);
-		node_ptr = node_ptr->next;
+		char_count = char_count + ft_strlen(node_ptr->data);
+		if (node_ptr->next == NULL)
+			islast = 1;
+		else
+			node_ptr = node_ptr->next;
 	}
-	str_ptr = node_ptr->data;
-	char_count = char_count + ft_strlen(str_ptr);
 
 	all = ft_calloc(char_count + 1, sizeof(char));
 	all_cpy = all; 
 	node_ptr = head->next;
-	while (node_ptr->next != NULL)
+	islast = 0;
+	while (islast != 1)
 	{
 		str_ptr = node_ptr->data;
 		while (*str_ptr != '\0')
@@ -118,27 +46,98 @@ char	*create_line(t_node	*head)
 			str_ptr++;
 			all++;
 		}
-		node_ptr = node_ptr->next;
-	}
-	str_ptr = node_ptr->data;
-	while (*str_ptr != '\0')
-	{
-		*all = *str_ptr;
-		str_ptr++;
-		all++;
+		if (node_ptr->next == NULL)
+			islast = 1;
+		else
+			node_ptr = node_ptr->next;
 	}
 	return(all_cpy);
 }
 
-bool	is_eol(char	*str)
+void	insert_by(t_node	*head, char	*buff, int status)
 {
-	int	i;
+    t_node		*node;
+	t_node		*findlast;
+	char	*buff_cpy;
+
+	buff_cpy = buff;
+	findlast = head;
+	node = ft_calloc(1, sizeof(t_node));
+
+	while(*buff != '\n' && *buff != '\0')
+		buff++;
+	/*if (status == 2)
+           *(buff + 1) = '\0';*/
+	node->data = buff_cpy;
+	node->next = NULL;
+	while (findlast->next != NULL)
+		findlast = findlast->next;
+	findlast->next = node;
+}
+
+char	*insert_by_withres(t_node	*head, char	*buff)
+{
+    t_node		*node;
+	t_node		*findlast;
+	char	*res;
+	char  *res_cpy;
+	char	*buff_cpy;
+	char	*nl;
+
+	buff_cpy = buff;
+	findlast = head;
+	node = ft_calloc(1, sizeof(t_node));
+
+	while(*buff != '\n')
+		buff++;
+
+	nl = buff;
+	buff++;
+	res = ft_calloc(BUFFER_SIZE, sizeof(char));
+	res_cpy = res;
+	while(*buff != '\0')
+	{
+		*res = *buff;
+		res++;
+		buff++;
+	}
+	*(nl + 1) = '\0';
+	node->data = buff_cpy;
+	node->next = NULL;
+	while (findlast->next != NULL)
+		findlast = findlast->next;
+	findlast->next = node;
+	return(res_cpy);
+}
+
+
+void	insert_full(t_node	*head, char	*buff)
+{
+	t_node	*node;
+	t_node	*findlast;
+
+	findlast = head;
+	node = ft_calloc (1, sizeof(t_node));
+	node->data = buff;
+	node->next = NULL;
+	while (findlast->next != NULL)
+		findlast = findlast->next;
+	findlast->next = node;
+}
+
+int     checkstatus(char    *buff)
+{
+    int	i;
 
 	i = 0;
 	while (i < BUFFER_SIZE)
 	{
-		if(str[i] == '\n' || str[i]== '\0')
+		if(buff[i] == '\n' && i < BUFFER_SIZE - 1 && buff[i + 1] != '\0')
 			return(1);
+        else if(buff[i] == '\n')
+            return(2);
+        else if(buff[i]== '\0' || buff[i + 1] != '\0')
+            return(3);
 		i++;
 	}
 	return(0);
@@ -146,78 +145,53 @@ bool	is_eol(char	*str)
 
 char	*get_next_line(int fd)
 {
-	t_node	*head;
+    t_node	*head;
 	char	*buff;
-	bool	done;
-	int		byte_read;
-	char	*all;
+    static int     status = 0;
+    int		byte_read;
+    bool    done;
+	char *rtn;
+	static char	*res;
 
-	if (BUFFER_SIZE < 1)
+	if (BUFFER_SIZE < 1 || status == 3 || fd < 0 )
 		return (NULL);
-	done = 0;
 	byte_read = 1;
+	done = 0;
 	head = ft_calloc(1, sizeof(t_node));
 	head->data = NULL;
 	head->next = NULL;
 
-	insert_newnode_eol(head, NULL);
-
-	while (done == 0)
-	{
+    if(status == 1)
+        insert_full(head, res);
+    while (done != 1)
+    {
 		buff = ft_calloc (BUFFER_SIZE + 1, sizeof(char));
-		byte_read = read(fd, buff, BUFFER_SIZE);
-		if (byte_read == -1)
+        byte_read = read(fd, buff, BUFFER_SIZE);
+		printf("%d, %c, ", byte_read, *buff);
+        if (byte_read == -1 || buff == NULL || *buff == '\0')
 		{
 			free(buff);
+			free(head);
 			return (NULL);
 		}
-		else
-			buff[BUFFER_SIZE] = '\0';
-		if (is_eol(buff) == 0)
-			insert_newnode(head, buff);
-		else
+        buff[BUFFER_SIZE] = '\0';
+        status = checkstatus (buff);
+		printf("%c, %d\n", *buff, status);
+        if (status == 0)
+            insert_full(head, buff);
+		else if (status == 1)
 		{
-			insert_newnode_eol(head, buff);
+            res = insert_by_withres(head, buff);
+            done = 1;
+        }
+		else if (status == 2 || status == 3)
+		{
+			insert_by(head, buff, status);
 			done = 1;
 		}
-	}
-	all = create_line(head);
-	free(head);
-	return(all);
-}
+    }
 
-
-int	main()
-{
-	int		fd;
-	char	*str;
-	
-	str = get_next_line(fd);
-	printf("\n\n<< return value1:%s >>\n",str);
-
-	str = get_next_line(fd);
-	printf("\n\n<< return value2:%s >>\n",str);
-
-	str = get_next_line(fd);
-	printf("\n\n<< return value2:%s >>\n",str);
-
-	str = get_next_line(fd);
-	printf("\n\n<< return value1:%s >>\n",str);
-
-	str = get_next_line(fd);
-	printf("\n\n<< return value1:%s >>\n",str);
-
-	str = get_next_line(fd);
-	printf("\n\n<< return value1:%s >>\n",str);
-
-	str = get_next_line(fd);
-	printf("\n\n<< return value1:%s >>\n",str);
-
-	str = get_next_line(fd);
-	printf("\n\n<< return value1:%s >>\n",str);
-
-	str = get_next_line(fd);
-	printf("\n\n<< return value1:%s >>\n",str);
-
-	close(fd);
+	rtn = create_line(head);
+	freeList(head);
+    return(rtn);
 }

@@ -25,13 +25,14 @@ typedef struct node
 	struct node	*next;
 }	t_node;
 
-char	*get_next_line(int fd);
-bool	is_newline(char *str);
-t_node	*initialize_node(t_node *head);
-char	*create_line(t_node *head);
-void	insert_newnode_newline(t_node *head, char *buff);
-void	insert_newnode(t_node *head, char *buff);
-int		ft_strlen(char *s);
+int     checkstatus(char    *buff);
+void	insert_full(t_node	*head, char	*buff);
+char	*create_line(t_node	*head);
+int	ft_strlen(char	*s);
 void	*ft_calloc(size_t nmemb, size_t size);
 void	*ft_memset(void *s, int c, size_t n);
+char	*get_next_line(int fd);
+void freeList(t_node *head);
+void	insert_by(t_node	*head, char	*buff, int status);
+char	*insert_by_withres(t_node	*head, char	*buff);
 #endif

@@ -48,3 +48,29 @@ void	*ft_calloc(size_t nmemb, size_t size)
 	ft_memset(mem, 0, size * nmemb);
 	return (mem);
 }
+
+int	ft_strlen(char	*s)
+{
+	int	i;
+
+	i = 0;
+	while (*s != 0)
+	{
+		i++;
+		s++;
+	}
+	return (i);
+}
+
+
+void freeList(t_node *head)
+{
+   t_node *tmp;
+
+   while (head != NULL)
+    {
+       tmp = head;
+       head = head->next;
+       free(tmp);
+    }
+}
