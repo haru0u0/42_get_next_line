@@ -18,12 +18,14 @@
 # include <fcntl.h>
 # include <stdlib.h>
 # include <stdbool.h>
+# include <string.h>
 
 typedef struct node
 {
 	char		*data;
 	struct node	*next;
 }	t_node;
+
 
 int     checkstatus(char    *buff);
 void	insert_full(t_node	*head, char	*buff);
@@ -33,6 +35,7 @@ void	*ft_calloc(size_t nmemb, size_t size);
 void	*ft_memset(void *s, int c, size_t n);
 char	*get_next_line(int fd);
 void freeList(t_node *head);
-void	insert_by(t_node	*head, char	*buff, int status);
+void	insert_by(t_node	*head, char	*buff);
 char	*insert_by_withres(t_node	*head, char	*buff);
+size_t	ft_strlcpy(char *dst, char *src, size_t size);
 #endif

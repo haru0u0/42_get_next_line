@@ -11,6 +11,10 @@
 /* ************************************************************************** */
 #include "get_next_line.h"
 
+#include "leakdetect.h"
+#define malloc(s) leak_detelc_malloc(s, __FILE__, __LINE__)
+#define free leak_detect_free
+
 void	*ft_memset(void *s, int c, size_t n)
 {
 	char	*ptr;
@@ -37,14 +41,10 @@ void	*ft_calloc(size_t nmemb, size_t size)
 	}
 	bytes = nmemb * size;
 	if (bytes / size != nmemb)
-	{
 		return (NULL);
-	}
 	mem = malloc(size * nmemb);
 	if (mem == NULL)
-	{
 		return (NULL);
-	}
 	ft_memset(mem, 0, size * nmemb);
 	return (mem);
 }
@@ -54,13 +54,14 @@ int	ft_strlen(char	*s)
 	int	i;
 
 	i = 0;
-	while (*s != 0)
+	while (*s != '\0')
 	{
 		i++;
 		s++;
 	}
 	return (i);
 }
+
 
 
 void freeList(t_node *head)
@@ -73,4 +74,24 @@ void freeList(t_node *head)
        head = head->next;
        free(tmp);
     }
+}
+
+size_t	ft_strlcpy(char *dst, char *src, size_t size)
+{
+	size_t	srclen;
+
+	srclen = ft_strlen (src);
+	if (size == 0)
+	{
+		return (srclen);
+	}
+	while (size != 1 && *src != '\0')
+	{
+		*dst = *src;
+		dst++;
+		src++;
+		size--;
+	}
+	*dst = '\0';
+	return (srclen);
 }

@@ -12,6 +12,10 @@
 
 #include "get_next_line.h"
 
+#include "leakdetect.h"
+#define malloc(s) leak_detelc_malloc(s, __FILE__, __LINE__)
+#define free leak_detect_free
+
 char	*create_line(t_node	*head)
 {
 	t_node	*node_ptr;
@@ -33,7 +37,9 @@ char	*create_line(t_node	*head)
 			node_ptr = node_ptr->next;
 	}
 
-	all = ft_calloc(char_count + 1, sizeof(char));
+	//all = ft_calloc(char_count + 1, sizeof(char));
+	all = malloc((char_count + 1) * sizeof(char));
+	ft_memset(all, 0, (char_count + 1) * sizeof(char));
 	all_cpy = all; 
 	node_ptr = head->next;
 	islast = 0;
@@ -54,7 +60,7 @@ char	*create_line(t_node	*head)
 	return(all_cpy);
 }
 
-void	insert_by(t_node	*head, char	*buff, int status)
+void	insert_by(t_node	*head, char	*buff)
 {
     t_node		*node;
 	t_node		*findlast;
@@ -62,12 +68,13 @@ void	insert_by(t_node	*head, char	*buff, int status)
 
 	buff_cpy = buff;
 	findlast = head;
-	node = ft_calloc(1, sizeof(t_node));
+	//node = ft_calloc(1, sizeof(t_node));
+	node = malloc(sizeof(t_node));
+	ft_memset(node, 0, sizeof(t_node));
 
 	while(*buff != '\n' && *buff != '\0')
 		buff++;
-	/*if (status == 2)
-           *(buff + 1) = '\0';*/
+	*buff = '\0';  //たぶん必要
 	node->data = buff_cpy;
 	node->next = NULL;
 	while (findlast->next != NULL)
@@ -86,14 +93,18 @@ char	*insert_by_withres(t_node	*head, char	*buff)
 
 	buff_cpy = buff;
 	findlast = head;
-	node = ft_calloc(1, sizeof(t_node));
+	//node = ft_calloc(1, sizeof(t_node));
+	node = malloc(sizeof(t_node));
+	ft_memset(node, 0, sizeof(t_node));
 
 	while(*buff != '\n')
 		buff++;
 
 	nl = buff;
 	buff++;
-	res = ft_calloc(BUFFER_SIZE, sizeof(char));
+	//res = ft_calloc(BUFFER_SIZE, sizeof(char));
+	res = malloc(BUFFER_SIZE * sizeof(char));
+	ft_memset(res, 0, BUFFER_SIZE * sizeof(char));
 	res_cpy = res;
 	while(*buff != '\0')
 	{
@@ -111,19 +122,24 @@ char	*insert_by_withres(t_node	*head, char	*buff)
 }
 
 
+
 void	insert_full(t_node	*head, char	*buff)
 {
 	t_node	*node;
 	t_node	*findlast;
 
 	findlast = head;
-	node = ft_calloc (1, sizeof(t_node));
+	//node = ft_calloc (1, sizeof(t_node));
+	node = malloc(sizeof(t_node));
+	ft_memset(node, 0, sizeof(t_node));
 	node->data = buff;
 	node->next = NULL;
 	while (findlast->next != NULL)
 		findlast = findlast->next;
 	findlast->next = node;
 }
+
+
 
 int     checkstatus(char    *buff)
 {
@@ -132,11 +148,12 @@ int     checkstatus(char    *buff)
 	i = 0;
 	while (i < BUFFER_SIZE)
 	{
+		//printf("buff[i]: %c\n", buff[i]);
 		if(buff[i] == '\n' && i < BUFFER_SIZE - 1 && buff[i + 1] != '\0')
 			return(1);
         else if(buff[i] == '\n')
             return(2);
-        else if(buff[i]== '\0' || buff[i + 1] != '\0')
+        else if(buff[i]== '\0')
             return(3);
 		i++;
 	}
@@ -157,7 +174,9 @@ char	*get_next_line(int fd)
 		return (NULL);
 	byte_read = 1;
 	done = 0;
-	head = ft_calloc(1, sizeof(t_node));
+	//head = ft_calloc(1, sizeof(t_node));
+	head = malloc(sizeof(t_node));
+	ft_memset(head, 0, sizeof(t_node));
 	head->data = NULL;
 	head->next = NULL;
 
@@ -165,20 +184,27 @@ char	*get_next_line(int fd)
         insert_full(head, res);
     while (done != 1)
     {
-		buff = ft_calloc (BUFFER_SIZE + 1, sizeof(char));
+		//buff = ft_calloc (BUFFER_SIZE + 1, sizeof(char));
+		buff = malloc((BUFFER_SIZE + 1) * sizeof(char));
+		ft_memset(buff, 0, (BUFFER_SIZE + 1) * sizeof(char));
         byte_read = read(fd, buff, BUFFER_SIZE);
-		printf("%d, %c, ", byte_read, *buff);
-        if (byte_read == -1 || buff == NULL || *buff == '\0')
+		//printf("byte_read: %d\n", byte_read);
+        if (byte_read < 0 || (BUFFER_SIZE != 0 && *buff == '\0'))
 		{
 			free(buff);
 			free(head);
 			return (NULL);
 		}
         buff[BUFFER_SIZE] = '\0';
-        status = checkstatus (buff);
-		printf("%c, %d\n", *buff, status);
+		if (byte_read != 0)
+			status = checkstatus (buff);
+		else if(byte_read == 0)
+			status = 2;
+		//printf("status: %d\n", status);
         if (status == 0)
+		{
             insert_full(head, buff);
+		}
 		else if (status == 1)
 		{
             res = insert_by_withres(head, buff);
@@ -186,9 +212,10 @@ char	*get_next_line(int fd)
         }
 		else if (status == 2 || status == 3)
 		{
-			insert_by(head, buff, status);
+			insert_by(head, buff);
 			done = 1;
 		}
+		
     }
 
 	rtn = create_line(head);
